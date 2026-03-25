@@ -38,16 +38,15 @@ sudo curl -o docker-compose.yml https://raw.githubusercontent.com/wg-easy/wg-eas
 
 WG_HOST=$(curl -fsSL ifconfig.me)
 
-if [ "$HTTP_MODE" = true ]; then
-  sed -i 's/^#environment:/environment:/' docker-compose.yml
-  sed -i 's/^#  - INSECURE=false/  - INSECURE=true/' docker-compose.yml
-fi
+# always uncomment environment
+sed -i 's/^#environment:/environment:/' docker-compose.yml
 
-# add WG_HOST if environment exists, otherwise create it
-if grep -q "^environment:" docker-compose.yml; then
-  sed -i "/^environment:/a\  - WG_HOST=${WG_HOST}" docker-compose.yml
-else
-  sed -i "/wg-easy:/a\    environment:\n      - WG_HOST=${WG_HOST}" docker-compose.yml
+# replace HOST line always
+sed -i "s/^    #  - HOST=0.0.0.0/      - HOST=${WG_HOST}/" docker-compose.yml
+
+# enable insecure only in http mode
+if [ "$HTTP_MODE" = true ]; then
+  sed -i 's/^#  - INSECURE=false/  - INSECURE=true/' docker-compose.yml
 fi
 
 sudo docker compose up -d
